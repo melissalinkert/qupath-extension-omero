@@ -247,12 +247,18 @@ public class OmeroWebClient {
       throw new IOException("Could not find valid 'sessionid' cookie");
     }
 
-    // check for image region microservice - enables raw tile retrieval
-    // see https://github.com/glencoesoftware/omero-ms-image-region
-    //
-    // the session ID retrieved above is not required to perform this check,
-    // but both the session ID and microservice configuration must be present in order
-    // to retrieve raw tiles
+    return rtn;
+	}
+
+  /**
+   * Check for image region microservice - enables raw tile retrieval
+   * see https://github.com/glencoesoftware/omero-ms-image-region
+   *
+   * A valid session ID is not required to perform this check,
+   * but both the session ID and microservice configuration must be present in order
+   * to retrieve raw tiles.
+   */
+  private void checkForMicroservice() throws Exception {
     HttpURLConnection conn = null;
     try {
       URL optionsURL = new URL(serverURI.getScheme(), serverURI.getHost(), serverURI.getPort(), "/tile/");
@@ -277,9 +283,7 @@ public class OmeroWebClient {
     finally {
       conn.disconnect();
     }
-
-    return rtn;
-	}
+  }
 
 	private int keepAlive() {
 		try {
@@ -469,6 +473,9 @@ public class OmeroWebClient {
 	 */
 	public boolean logIn(String...args) {
 		try {
+      // check for microservice before authenticating, to allow public user
+      checkForMicroservice();
+
 			// TODO: Parse args to look for password (or password file - and don't store them!)
 			String usernameOld = username.get();
 			char[] password = null;
